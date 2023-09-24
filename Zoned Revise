@@ -1,0 +1,312 @@
+local DataStoreService = game:GetService("DataStoreService")
+local playerService = game:GetService("Players");
+local starterGui = game:GetService("StarterGui");
+local coreGui = game:GetService("CoreGui");
+local runService = game:GetService("RunService");
+local teleportService = game:GetService("TeleportService");
+local UserInputService = game:GetService("UserInputService");
+local tweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local gameCamera = Workspace.CurrentCamera;
+local lp = playerService.LocalPlayer;
+local guilibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/SourceKep/Zoned/main/ux.lua"), true)();
+local inventories = {item = function(item)
+    for _, value in pairs(ReplicatedStorage.Inventories[tostring(lp)]:GetChildren()) do
+        if value and value.Name:find(item) then
+            return ReplicatedStorage.Inventories[tostring(lp)][value.Name]
+        end
+    end
+end}
+local BedWarsData = {
+    rbxtrem = ReplicatedStorage.rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged,
+    blockrem =  ReplicatedStorage.rbxts_include.node_modules:FindFirstChild("@easy-games"):FindFirstChild("block-engine").node_modules:FindFirstChild("@rbxts").net.out._NetManaged,
+    eventsEasyGames = ReplicatedStorage:FindFirstChild("events-@easy-games/lobby:shared/event/lobby-events@getEvents.Events")
+}
+
+function getAirV4File(file)
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/SourceKep/AirV4ForRoblox/main/" .. file .. ".lua"), true)();
+end
+function getFile(file)
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/SourceKep/Zoned/main/" .. file .. ".lua"), true)();
+end
+function loadgithubfile(link)
+    return loadstring(game:HttpGet(link), true)();
+end
+local function isAlive()
+    return lp and lp ~= nil and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and lp.Character:FindFirstChild("Humanoid") and lp.Character:WaitForChild("HumanoidRootPart") and lp.Character:WaitForChild("Humanoid")
+end
+local function teleportToGame(placeid)
+    return teleportService:Teleport(placeid)
+end
+local function entityNear(distance, mode)
+    for _, player in pairs(playerService:GetPlayers()) do
+        if player and player ~= lp and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.TeamColor ~= lp.TeamColor then
+            local distanceBetween = (player.Character:FindFirstChild("HumanoidRootPart").Position - lp.Character:FindFirstChild("HumanoidRootPart").Position).Magnitude
+            if distanceBetween <= distance then
+                print ("found character " .. tostring(player.Name))
+                return player.Character
+            end
+        end
+    end
+    warn("no players")
+end
+
+local function spawnFunc(func) return func() end
+
+local function newspeed(speed)
+    if isAlive() then
+        lp.Character.Humanoid.WalkSpeed = 23
+    end
+end
+
+spawnFunc(function()
+    local killaura = {enabled = false}
+    guilibrary:CreateButton({
+        Name = "KillAura",
+        description = "Attacks players in your area without you looking",
+        Function = function(callback)
+            if callback then
+                killaura.enabled = true
+                if killaura.enabled then
+                    while true do
+                        task.spawn(function()
+                            local function getTargets() return entityNear(20) end
+                            local function checktargets() if getTargets() then return true else return false end end
+                            local function setvalues(newvalue) return {value = newvalue} end
+                            local function entity() if checktargets() and getTargets():FindFirstChild("HumanoidRootPart") then return getTargets() end end
+                            local function chargeRatio(value) return {chargeRatio = value} end
+                            local killauraremote = BedWarsData.rbxtrem.SwordHit:FireServer({
+                                weapon = inventories.item("sword"),
+                                chargedAttack = chargeRatio(0 or 0.999),
+                                entityInstance = entity(),
+                                validate = {
+                                    raycast = {
+                                        cameraPosition = setvalues(gameCamera.CFrame),
+                                        cursorDirection = setvalues(CFrame.new(lp:GetMouse().Hit.X, lp:GetMouse().Hit.Y, lp:GetMouse().Hit.Z))
+                                    },
+                                    targetPosition = setvalues(entity():FindFirstChild("HumanoidRootPart").Position),
+                                    selfPosition = setvalues(lp.Character:FindFirstChild("HumanoidRootPart").Position)
+                                }
+                            })
+                        end)
+                        task.wait()
+                    end
+                else
+                    return nil
+                end
+            end
+        end
+    })
+end)
+
+guilibrary:CreateButton({
+    Name = "Speed",
+    description = "Increases movement speed with minimal bypasses",
+    Function = function()
+        local speedhook;
+        local humanoid = lp.Character:FindFirstChild("Humanoid")
+        speedhook = hookmetamethod(game, "__index", function(player, property)
+            if player == humanoid and property == "WalkSpeed" then
+                return 16
+            end
+            return speedhook(player, property)
+        end)
+        while true do
+            task.spawn(function()
+                newspeed(23.18)
+            end)
+            task.wait()
+        end
+    end
+})
+
+guilibrary:CreateButton({
+    Name = "CheatDetector",
+    description = "Checks if a player is hacking based on Y level",
+    Function = function()
+        while true do
+            task.spawn(function()
+                for _, player in pairs(playerService:GetPlayers()) do
+                    if player ~= lp and player and (player.Character and player.Character:WaitForChild("HumanoidRootPart")) and player:WaitForChild("Humanoid") then
+                        local targetYPosition = player.Character.HumanoidRootPart.Position.Y
+                        if targetYPosition >= 1000 then
+                            starterGui:SetCore("SendNotification",{
+                                Title = "Cheat Detector";
+                                Text = player.Name .. " Is cheating reason: Y level is greater then usual";
+                                Duration = 1.5;
+                            })
+                            break
+                        end
+                    end
+                end
+            end)
+            task.wait()
+        end
+    end
+})
+
+guilibrary:CreateButton({
+    Name = "Chams",
+    description = "Lets you see players through walls",
+    Function = function()
+        while true do
+            task.spawn(function()
+                for _, player in pairs(playerService:GetPlayers()) do
+                    if player and player.Character and player ~= lp then
+                        if not player.Character:FindFirstChild("Highlight") then
+                            local Highlight = Instance.new("Highlight")
+                            Highlight.Parent = player.Character
+                            Highlight.FillColor = Color3.fromRGB(87, 230, 255)
+                            Highlight.OutlineTransparency = 0.3
+                        end
+                    end
+                end
+            end)
+            task.wait()
+        end
+    end
+})
+
+guilibrary:CreateButton({
+    Name = "ServerHop/Rejoin",
+    description = "tries to rejoins the game you were in",
+    Function  = function ()
+        teleportToGame(game.PlaceId)
+    end
+})
+
+guilibrary:CreateButton({
+    Name = "Load AirV4",
+    description = "Loads AirV4 by SourceKep",
+    Function  = function ()
+        getAirV4File("MainScript")
+    end
+})
+
+guilibrary:CreateButton({
+    Name = "AntiAFK",
+    description = "Removes your afk status in a match",
+    Function = function(callback)
+        if callback then
+            task.spawn(function()
+                BedWarsData.rbxtrem.AfkInfo:FireServer({afk = false})
+            end)
+        end
+    end
+})
+
+guilibrary:CreateButton({
+    Name = "Load SP",
+    description = "loads simple spy by exx",
+    Function  = function (callback)
+        if callback then
+            loadgithubfile("https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/SimpleSpy.lua")
+        end
+    end
+})
+
+guilibrary:CreateButton({
+    Name = "FOV120",
+    description = "Changes your FOV to 120",
+    Function  = function (callback)
+        if callback then
+            while true do
+                gameCamera.FieldOfView = 120
+                task.wait()
+            end
+        end
+    end
+})
+
+guilibrary:CreateButton({
+    Name = "AutoQue",
+    description = "Automatically ques into a match",
+    Function = function (callback)
+        if callback then
+            BedWarsData.eventsEasyGames.joinQueue:FireServer({queueType = "bedwars_to1" })
+        end
+    end
+})
+
+guilibrary:CreateButton({
+    Name = "JumpBoost",
+    description = "Dashes a little bit when you press a keybind",
+    Function = function(callback)
+        if callback then
+            lp.Character.Humanoid.JumpHeight = 15
+        end
+    end
+})
+
+guilibrary:CreateButton({
+    Name = "Lobby",
+    description = "Returns to the bedwars lobby",
+    Function = function()
+        teleportToGame(6872265039)
+    end
+})
+
+-- Fly Button
+guilibrary:CreateButton({
+    Name = "Fly",
+    description = "Enables Fly",
+    Function = function(callback)
+        if callback then
+            -- Enable Fly
+            local flySpeed = 0.5 -- Adjust the fly speed as needed
+            local flyToggle = false
+
+            UserInputService.InputBegan:Connect(function(input, isProcessed)
+                if not isProcessed and input.KeyCode == Enum.KeyCode.Space then
+                    flyToggle = not flyToggle
+                    if flyToggle then
+                        while flyToggle do
+                            lp.Character:Move(Vector3.new(0, flySpeed, 0))
+                            task.wait()
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+-- Reach Button
+guilibrary:CreateButton({
+    Name = "Reach",
+    description = "Enables Reach",
+    Function = function(callback)
+        if callback then
+            -- Enable Reach
+            local reachDistance = 50 -- Adjust the reach distance as needed
+
+            local function getNearestEntity()
+                local nearestEntity = nil
+                local shortestDistance = reachDistance
+
+                for _, player in pairs(playerService:GetPlayers()) do
+                    if player ~= lp and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        local distance = (player.Character:FindFirstChild("HumanoidRootPart").Position - lp.Character:FindFirstChild("HumanoidRootPart").Position).Magnitude
+                        if distance <= shortestDistance then
+                            nearestEntity = player
+                            shortestDistance = distance
+                        end
+                    end
+                end
+
+                return nearestEntity
+            end
+
+            UserInputService.InputBegan:Connect(function(input, isProcessed)
+                if not isProcessed and input.KeyCode == Enum.KeyCode.F then
+                    local nearestEntity = getNearestEntity()
+                    if nearestEntity then
+                        -- Teleport to the nearest entity
+                        lp.Character.HumanoidRootPart.CFrame = CFrame.new(nearestEntity.Character.HumanoidRootPart.Position)
+                    end
+                end
+            end)
+        end
+    end
+})
