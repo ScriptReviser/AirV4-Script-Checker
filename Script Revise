@@ -1,0 +1,116 @@
+repeat task.wait() until game:IsLoaded()
+local CollectionService, GuiService, HttpService, LocalizationService, PathfindingService, ReplicatedStorage, UserInputService, library, Players, lp = game:GetService("CollectionService"), game:GetService("GuiService"), game:GetService("HttpService"), game:GetService("LocalizationService"), game:GetService("PathfindingService"), game:GetService("ReplicatedStorage"), game:GetService("UserInputService"), loadstring(game:HttpGet("https://raw.githubusercontent.com/SourceKep/AirV4ForRoblox/main/ux.lua"), true)(), game:GetService("Players"), game:GetService("Players").LocalPlayer
+local lpMouse, x, y, z = lp:GetMouse(), lpMouse.Hit.X, lpMouse.Hit.Y, lpMouse.Hit.Z
+local playertable, Connections, airv4table = {}, {}, {}
+local bedwars = {
+    bedwarsremote = ReplicatedStorage.rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged,
+    blockremote = ReplicatedStorage.rbxts_include.node_modules:FindFirstChild("@easy-games"):FindFirstChild("block-engine").node_modules:FindFirstChild("@rbxts").net.out._NetManaged
+}
+playertable.range = 30
+local entitylist = {players = {}, blocklist = {}}
+for _, v in pairs(Players:GetPlayers()) do table.insert(entitylist.players, v) end
+local function findItem(name)
+    for i, v in pairs(ReplicatedStorage.Inventories[lp.Name]:GetChildren()) do
+        if v then if v.Name:find(name) then return v.Name end
+        end
+    end
+end
+local CombatCategory = library.CreateCategory({Name = "Combat", Icon = library:downloadAsset("libraries/combat.png", "int")})
+local KeyBinds = {KillAuraKeyBind = "R"}
+local Connection = {}
+local Combat = CombatCategory.CreateWindow()
+local Killaura = Combat.CreateButton({
+    Name = "KillAura",
+    Function = function(callback)
+        if callback then
+            Connection["input"] = UserInputService.InputBegan:Connect(function(input, gpe)
+                if gpe then return end
+                if input.KeyCode == Enum.KeyCode[KeyBinds.KillAuraKeyBind] then
+                    local target
+                    for i, v in pairs(entitylist.players) do
+                        if v and v.Character and v ~= lp and v.Character.HumanoidRootPart and not v:isA("Model") then
+                            local distance = (v.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude
+                            if distance < playertable.range and distance < math.huge then target = v.Character break end
+                        end
+                    end
+                    for _, v in pairs(entitylist.players) do if not v:FindFirstChild("HumanoidRootPart") or v:isA("Model") then print("False") end end
+                    if target and target:WaitForChild("HumanoidRootPart") and lp.Character and lp.Character:WaitForChild("HumanoidRootPart") then
+                        repeat bedwars.bedwarsremote.SwordHit:FireServer({
+                            weapon = ReplicatedStorage.Inventories[lp.Name][findItem('sword')] or ReplicatedStorage.Inventories[lp.Name][findItem('Sword')],
+                            chargedAttack = {chargeRatio = 0 or 0.999},
+                            entityInstance = target,
+                            validate = {
+                                raycast = {
+                                    cameraPosition = {value = workspace.CurrentCamera.CFrame},
+                                    cursorDirection = {value = CFrame.new(lpMouse.Hit.X, lpMouse.Hit.Y, lpMouse.Hit.Z).LookVector}
+                                },
+                                targetPosition = {value = target.HumanoidRootPart.Position},
+                                selfPosition = {value = lp.Character.HumanoidRootPart.Position}
+                            }
+                        }) until target.Character.Humanoid.Health <= 0 print("SwordHit!") end
+                end
+            end)
+            if not lp or lp.Character.Humanoid.Health <= 0 then Connection["input"]:Disconnect() Connection["input"] = nil end
+        end
+    end
+})
+local AntiAFK = Combat.CreateButton({
+    Name = "AntiAFK",
+    Function = function(callback)
+        if callback then bedwars.bedwarsremote.AfkInfo:FireServer({afk = false}) end
+    end
+})
+local Speed = Combat.CreateButton({
+    Name = "Speed",
+    Function = function(callback)
+        if callback then
+            repeat
+                workspace.CurrentCamera.FieldOfView = 110
+                lp.Character.Humanoid.WalkSpeed = 23
+                task.wait()
+            until not lp
+        end
+    end
+})
+-- Reach and Fly Script
+local FlySpeed = 1
+local FlyMode = false
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if not gameProcessedEvent then
+        if input.KeyCode == Enum.KeyCode.F then
+            FlyMode = not FlyMode
+            if FlyMode then
+                local hrp = lp.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.Anchored = true
+                    local bodyVelocity = Instance.new("BodyVelocity")
+                    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                    bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
+                    bodyVelocity.P = 5000
+                    bodyVelocity.Parent = hrp
+                end
+            else
+                local hrp = lp.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.Anchored = false
+                    hrp:FindFirstChild("BodyVelocity"):Destroy()
+                end
+            end
+        end
+    end
+end)
+local Fly = function()
+    local hrp = lp.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        local forward = hrp.CFrame.lookVector * ((UserInputService:IsKeyDown(Enum.KeyCode.W) and 1 or 0) - (UserInputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0))
+        local right = hrp.CFrame.rightVector * ((UserInputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0) - (UserInputService:IsKeyDown(Enum.KeyCode.A) and 1 or 0))
+        local up = Vector3.new(0, ((UserInputService:IsKeyDown(Enum.KeyCode.Space) and 1 or 0) - (UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and 1 or 0)) * FlySpeed, 0)
+        local bodyVelocity = hrp:FindFirstChild("BodyVelocity")
+        bodyVelocity.Velocity = (forward + right + up) * FlySpeed
+    end
+end
+game:GetService("RunService").RenderStepped:Connect(function()
+    if FlyMode then
+        Fly()
+    end
+end)
