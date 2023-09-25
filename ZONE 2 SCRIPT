@@ -1,0 +1,375 @@
+repeat task.wait() until game:IsLoaded()
+
+local CollectionService, GuiService, HttpService, LocalizationService, PathfindingService, ReplicatedStorage, UserInputService, library, Players, lp = game:GetService("CollectionService"), game:GetService("GuiService"), game:GetService("HttpService"), game:GetService("LocalizationService"), game:GetService("PathfindingService"), game:GetService("ReplicatedStorage"), game:GetService("UserInputService"), loadstring(game:HttpGet("https://raw.githubusercontent.com/SourceKep/AirV4ForRoblox/main/ux.lua"), true)(), game:GetService("Players"), game:GetService("Players").LocalPlayer
+local lpMouse, x, y, z = lp:GetMouse(), lpMouse.Hit.X, lpMouse.Hit.Y, lpMouse.Hit.Z
+local playertable, Connections, airv4table = {}, {}, {}
+local bedwars = {
+    bedwarsremote = ReplicatedStorage.rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged,
+    blockremote = ReplicatedStorage.rbxts_include.node_modules:FindFirstChild("@easy-games"):FindFirstChild("block-engine").node_modules:FindFirstChild("@rbxts").net.out._NetManaged
+}
+playertable.range = 30
+local entitylist = {players = {}, blocklist = {}}
+for _, v in pairs(Players:GetPlayers()) do table.insert(entitylist.players, v) end
+local function findItem(name)
+    for i, v in pairs(ReplicatedStorage.Inventories[lp.Name]:GetChildren()) do
+        if v then if v.Name:find(name) then return v.Name end
+        end
+    end
+end
+
+local CombatCategory = library.CreateCategory({Name = "Combat", Icon = library:downloadAsset("libraries/combat.png", "int")})
+local KeyBinds = {KillAuraKeyBind = "R"}
+local Connection = {}
+local Combat = CombatCategory.CreateWindow()
+
+-- KillAura feature
+local KillauraEnabled = false
+
+Combat.CreateButton({
+    Name = "KillAura",
+    Function = function(callback)
+        if callback then
+            KillauraEnabled = not KillauraEnabled
+            if KillauraEnabled then
+                Connection["input"] = UserInputService.InputBegan:Connect(function(input, gpe)
+                    if gpe then return end
+                    if input.KeyCode == Enum.KeyCode[KeyBinds.KillAuraKeyBind] then
+                        local target
+                        for i, v in pairs(entitylist.players) do
+                            if v and v.Character and v ~= lp and v.Character.HumanoidRootPart and not v:isA("Model") then
+                                local distance = (v.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude
+                                if distance < playertable.range and distance < math.huge then target = v.Character break end
+                            end
+                        end
+                        for _, v in pairs(entitylist.players) do if not v:FindFirstChild("HumanoidRootPart") or v:isA("Model") then print("False") end end
+                        if target and target:WaitForChild("HumanoidRootPart") and lp.Character and lp.Character:WaitForChild("HumanoidRootPart") then
+                            repeat bedwars.bedwarsremote.SwordHit:FireServer({
+                                weapon = ReplicatedStorage.Inventories[lp.Name][findItem('sword')] or ReplicatedStorage.Inventories[lp.Name][findItem('Sword')],
+                                chargedAttack = {chargeRatio = 0 or 0.999},
+                                entityInstance = target,
+                                validate = {
+                                    raycast = {
+                                        cameraPosition = {value = workspace.CurrentCamera.CFrame},
+                                        cursorDirection = {value = CFrame.new(lpMouse.Hit.X, lpMouse.Hit.Y, lpMouse.Hit.Z).LookVector}
+                                    },
+                                    targetPosition = {value = target.HumanoidRootPart.Position},
+                                    selfPosition = {value = lp.Character.HumanoidRootPart.Position}
+                                }
+                            }) until target.Character.Humanoid.Health <= 0 print("SwordHit!") end
+                    end
+                end)
+                if not lp or lp.Character.Humanoid.Health <= 0 then Connection["input"]:Disconnect() Connection["input"] = nil end
+            end
+        end
+    end
+})
+
+-- Speed feature
+local SpeedEnabled = false
+
+Combat.CreateButton({
+    Name = "Speed",
+    Function = function(callback)
+        if callback then
+            SpeedEnabled = not SpeedEnabled
+            if SpeedEnabled then
+                repeat
+                    workspace.CurrentCamera.FieldOfView = 110
+                    lp.Character.Humanoid.WalkSpeed = 23
+                    task.wait()
+                until not lp
+            end
+        end
+    end
+})
+
+-- Cheat Detector feature
+local CheatDetectorEnabled = false
+
+Combat.CreateButton({
+    Name = "Cheat Detector",
+    Function = function(callback)
+        if callback then
+            CheatDetectorEnabled = not CheatDetectorEnabled
+            if CheatDetectorEnabled then
+                while true do
+                    task.spawn(function()
+                        for _, player in pairs(Players:GetPlayers()) do
+                            if player ~= lp and player and (player.Character and player.Character:WaitForChild("HumanoidRootPart")) and player:WaitForChild("Humanoid") then
+                                local targetYPosition = player.Character.HumanoidRootPart.Position.Y
+                                if targetYPosition >= 1000 then
+                                    starterGui:SetCore("SendNotification",{
+                                        Title = "Cheat Detector";
+                                        Text = player.Name .. " may be using cheats!";
+                                        Icon = "rbxassetid://5821753819";
+                                        Duration = 5;
+                                    })
+                                end
+                            end
+                        end
+                    end)
+                    task.wait(5)
+                end
+            end
+        end
+    end
+})
+
+-- Chams feature
+local ChamsEnabled = false
+
+Combat.CreateButton({
+    Name = "Chams",
+    Function = function(callback)
+        if callback then
+            ChamsEnabled = not ChamsEnabled
+            if ChamsEnabled then
+                -- Add your chams code here
+            else
+                -- Disable chams code here
+            end
+        end
+    end
+})
+
+-- ServerHop/Rejoin feature
+local ServerHopRejoinEnabled = false
+
+Combat.CreateButton({
+    Name = "ServerHop/Rejoin",
+    Function = function(callback)
+        if callback then
+            ServerHopRejoinEnabled = not ServerHopRejoinEnabled
+            if ServerHopRejoinEnabled then
+                -- Add your server hop/rejoin code here
+            else
+                -- Disable server hop/rejoin code here
+            end
+        end
+    end
+})
+
+-- Load AirV4 feature
+local LoadAirV4Enabled = false
+
+Combat.CreateButton({
+    Name = "Load AirV4",
+    Function = function(callback)
+        if callback then
+            LoadAirV4Enabled = not LoadAirV4Enabled
+            if LoadAirV4Enabled then
+                -- Add your load AirV4 code here
+            else
+                -- Disable load AirV4 code here
+            end
+        end
+    end
+})
+
+-- AntiAFK feature
+local AntiAFKEnabled = false
+
+Combat.CreateButton({
+    Name = "AntiAFK",
+    Function = function(callback)
+        if callback then
+            AntiAFKEnabled = not AntiAFKEnabled
+            if AntiAFKEnabled then
+                bedwars.bedwarsremote.AfkInfo:FireServer({afk = false})
+            end
+        end
+    end
+})
+
+-- Load SP feature
+local LoadSPEnabled = false
+
+Combat.CreateButton({
+    Name = "Load SP",
+    Function = function(callback)
+        if callback then
+            LoadSPEnabled = not LoadSPEnabled
+            if LoadSPEnabled then
+                -- Add your load SP code here
+            else
+                -- Disable load SP code here
+            end
+        end
+    end
+})
+
+-- FOV120 feature
+local FOV120Enabled = false
+
+Combat.CreateButton({
+    Name = "FOV120",
+    Function = function(callback)
+        if callback then
+            FOV120Enabled = not FOV120Enabled
+            if FOV120Enabled then
+                gameCamera.FieldOfView = 120
+            else
+                gameCamera.FieldOfView = 70
+            end
+        end
+    end
+})
+
+-- AutoQue feature
+local AutoQueEnabled = false
+
+Combat.CreateButton({
+    Name = "AutoQue",
+    Function = function(callback)
+        if callback then
+            AutoQueEnabled = not AutoQueEnabled
+            if AutoQueEnabled then
+                -- Add your auto que code here
+            else
+                -- Disable auto que code here
+            end
+        end
+    end
+})
+
+-- JumpBoost feature
+local JumpBoostEnabled = false
+
+Combat.CreateButton({
+    Name = "JumpBoost",
+    Function = function(callback)
+        if callback then
+            JumpBoostEnabled = not JumpBoostEnabled
+            if JumpBoostEnabled then
+                -- Add your jump boost code here
+            else
+                -- Disable jump boost code here
+            end
+        end
+    end
+})
+
+-- Lobby feature
+local LobbyEnabled = false
+
+Combat.CreateButton({
+    Name = "Lobby",
+    Function = function(callback)
+        if callback then
+            LobbyEnabled = not LobbyEnabled
+            if LobbyEnabled then
+                -- Add your lobby code here
+            else
+                -- Disable lobby code here
+            end
+        end
+    end
+})
+
+DELETE THIS TEXT
+
+-- Fly feature
+local FlyEnabled = false
+
+guilibrary:CreateButton({
+    Name = "Fly",
+    Function = function(callback)
+        if callback then
+            FlyEnabled = not FlyEnabled
+            if FlyEnabled then
+                -- Add your Fly code here
+            else
+                -- Disable Fly code here
+            end
+        end
+    end
+})
+
+-- Reach feature
+local ReachEnabled = false
+
+guilibrary:CreateButton({
+    Name = "Reach",
+    Function = function(callback)
+        if callback then
+            ReachEnabled = not ReachEnabled
+            if ReachEnabled then
+                -- Add your Reach code here
+            else
+                -- Disable Reach code here
+            end
+        end
+    end
+})
+
+-- No Fall Damage feature
+local NoFallDamageEnabled = false
+
+guilibrary:CreateButton({
+    Name = "No Fall Damage",
+    Function = function(callback)
+        if callback then
+            NoFallDamageEnabled = not NoFallDamageEnabled
+            if NoFallDamageEnabled then
+                -- Add your No Fall Damage code here
+            else
+                -- Disable No Fall Damage code here
+            end
+        end
+    end
+})
+
+-- Hitbox Shower feature
+local HitboxShowerEnabled = false
+
+guilibrary:CreateButton({
+    Name = "Hitbox Shower",
+    Function = function(callback)
+        if callback then
+            HitboxShowerEnabled = not HitboxShowerEnabled
+            if HitboxShowerEnabled then
+                -- Add your Hitbox Shower code here
+            else
+                -- Disable Hitbox Shower code here
+            end
+        end
+    end
+})
+
+-- Hitbox Widener feature
+local HitboxWidenerEnabled = false
+
+guilibrary:CreateButton({
+    Name = "Hitbox Widener",
+    Function = function(callback)
+        if callback then
+            HitboxWidenerEnabled = not HitboxWidenerEnabled
+            if HitboxWidenerEnabled then
+                -- Add your Hitbox Widener code here
+            else
+                -- Disable Hitbox Widener code here
+            end
+        end
+    end
+})
+
+-- Chat Spammer feature
+local ChatSpammerEnabled = false
+
+guilibrary:CreateButton({
+    Name = "Chat Spammer",
+    Function = function(callback)
+        if callback then
+            ChatSpammerEnabled = not ChatSpammerEnabled
+            if ChatSpammerEnabled then
+                local spamMessage = "I'm Just Too Good"
+                while ChatSpammerEnabled do
+                    game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(spamMessage, "All")
+                    wait(2) -- Adjust the wait time as needed to control the spam rate
+                end
+            end
+        end
+    end
+})
+
+DELETE THIS TEXT TOO BUT ADD THOSE TWO TOGETHER DELETE THE ONES THAT DONT WORK
