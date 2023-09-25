@@ -1,0 +1,207 @@
+repeat task.wait() until game:IsLoaded()
+
+local CollectionService, HttpService, ReplicatedStorage, UserInputService, library, Players, lp = game:GetService("CollectionService"), game:GetService("HttpService"), game:GetService("ReplicatedStorage"), game:GetService("UserInputService"), loadstring(game:HttpGet("https://raw.githubusercontent.com/SourceKep/AirV4ForRoblox/main/ux.lua"), true)(), game:GetService("Players"), game:GetService("Players").LocalPlayer
+local lpMouse = lp:GetMouse()
+local playertable = {}
+local bedwars = {
+    bedwarsremote = ReplicatedStorage.rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged,
+    blockremote = ReplicatedStorage.rbxts_include.node_modules:FindFirstChild("@easy-games"):FindFirstChild("block-engine").node_modules:FindFirstChild("@rbxts").net.out._NetManaged
+}
+playertable.range = 30
+local entitylist = {players = {}, blocklist = {}}
+
+for _, v in pairs(Players:GetPlayers()) do table.insert(entitylist.players, v) end
+
+local function findItem(name)
+    for i, v in pairs(ReplicatedStorage.Inventories[lp.Name]:GetChildren()) do
+        if v then if v.Name:find(name) then return v.Name end
+        end
+    end
+end
+
+local KeyBinds = {KillAuraKeyBind = "R"}
+local Connection = {}
+
+-- KillAura feature
+local KillauraEnabled = false
+
+local function KillAura()
+    if KillauraEnabled then
+        Connection["input"] = UserInputService.InputBegan:Connect(function(input, gpe)
+            if gpe then return end
+            if input.KeyCode == Enum.KeyCode[KeyBinds.KillAuraKeyBind] then
+                local target
+                for i, v in pairs(entitylist.players) do
+                    if v and v.Character and v ~= lp and v.Character.HumanoidRootPart and not v:isA("Model") then
+                        local distance = (v.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude
+                        if distance < playertable.range and distance < math.huge then target = v.Character break end
+                    end
+                end
+                for _, v in pairs(entitylist.players) do if not v:FindFirstChild("HumanoidRootPart") or v:isA("Model") then print("False") end end
+                if target and target:WaitForChild("HumanoidRootPart") and lp.Character and lp.Character:WaitForChild("HumanoidRootPart") then
+                    repeat bedwars.bedwarsremote.SwordHit:FireServer({
+                        weapon = ReplicatedStorage.Inventories[lp.Name][findItem('sword')] or ReplicatedStorage.Inventories[lp.Name][findItem('Sword')],
+                        chargedAttack = {chargeRatio = 0 or 0.999},
+                        entityInstance = target,
+                        validate = {
+                            raycast = {
+                                cameraPosition = {value = workspace.CurrentCamera.CFrame},
+                                cursorDirection = {value = CFrame.new(lpMouse.Hit.X, lpMouse.Hit.Y, lpMouse.Hit.Z).LookVector}
+                            },
+                            targetPosition = {value = target.HumanoidRootPart.Position},
+                            selfPosition = {value = lp.Character.HumanoidRootPart.Position}
+                        }
+                    }) until target.Character.Humanoid.Health <= 0 print("SwordHit!") end
+            end
+        end)
+        if not lp or lp.Character.Humanoid.Health <= 0 then Connection["input"]:Disconnect() Connection["input"] = nil end
+    end
+end
+
+-- Speed feature
+local SpeedEnabled = false
+
+local function Speed()
+    if SpeedEnabled then
+        repeat
+            workspace.CurrentCamera.FieldOfView = 110
+            lp.Character.Humanoid.WalkSpeed = 23
+            task.wait()
+        until not lp
+    end
+end
+
+-- Cheat Detector feature
+local CheatDetectorEnabled = false
+
+local function CheatDetector()
+    if CheatDetectorEnabled then
+        while true do
+            task.spawn(function()
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= lp and player and (player.Character and player.Character:WaitForChild("HumanoidRootPart")) and player:WaitForChild("Humanoid") then
+                        local targetYPosition = player.Character.HumanoidRootPart.Position.Y
+                        if targetYPosition >= 1000 then
+                            starterGui:SetCore("SendNotification",{
+                                Title = "Cheat Detector";
+                                Text = player.Name .. " may be using cheats!";
+                                Icon = "rbxassetid://5821753819";
+                                Duration = 5;
+                            })
+                        end
+                    end
+                end
+            end)
+            task.wait(5)
+        end
+    end
+end
+
+-- Continue adding your features and functions here
+
+-- Main loop
+game:GetService("RunService").RenderStepped:Connect(function()
+DELETE THIS ------_--------
+-- Fly feature
+local FlyEnabled = false
+
+guilibrary:CreateButton({
+    Name = "Fly",
+    Function = function(callback)
+        if callback then
+            FlyEnabled = not FlyEnabled
+            if FlyEnabled then
+                -- Add your Fly code here
+            else
+                -- Disable Fly code here
+            end
+        end
+    end
+})
+
+-- Reach feature
+local ReachEnabled = false
+
+guilibrary:CreateButton({
+    Name = "Reach",
+    Function = function(callback)
+        if callback then
+            ReachEnabled = not ReachEnabled
+            if ReachEnabled then
+                -- Add your Reach code here
+            else
+                -- Disable Reach code here
+            end
+        end
+    end
+})
+
+-- No Fall Damage feature
+local NoFallDamageEnabled = false
+
+guilibrary:CreateButton({
+    Name = "No Fall Damage",
+    Function = function(callback)
+        if callback then
+            NoFallDamageEnabled = not NoFallDamageEnabled
+            if NoFallDamageEnabled then
+                -- Add your No Fall Damage code here
+            else
+                -- Disable No Fall Damage code here
+            end
+        end
+    end
+})
+
+-- Hitbox Shower feature
+local HitboxShowerEnabled = false
+
+guilibrary:CreateButton({
+    Name = "Hitbox Shower",
+    Function = function(callback)
+        if callback then
+            HitboxShowerEnabled = not HitboxShowerEnabled
+            if HitboxShowerEnabled then
+                -- Add your Hitbox Shower code here
+            else
+                -- Disable Hitbox Shower code here
+            end
+        end
+    end
+})
+
+-- Hitbox Widener feature
+local HitboxWidenerEnabled = false
+
+guilibrary:CreateButton({
+    Name = "Hitbox Widener",
+    Function = function(callback)
+        if callback then
+            HitboxWidenerEnabled = not HitboxWidenerEnabled
+            if HitboxWidenerEnabled then
+                -- Add your Hitbox Widener code here
+            else
+                -- Disable Hitbox Widener code here
+            end
+        end
+    end
+})
+
+-- Chat Spammer feature
+local ChatSpammerEnabled = false
+
+guilibrary:CreateButton({
+    Name = "Chat Spammer",
+    Function = function(callback)
+        if callback then
+            ChatSpammerEnabled = not ChatSpammerEnabled
+            if ChatSpammerEnabled then
+                local spamMessage = "I'm Just Too Good"
+                while ChatSpammerEnabled do
+                    game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(spamMessage, "All")
+                    wait(2) -- Adjust the wait time as needed to control the spam rate
+                end
+            end
+        end
+    end
+})
